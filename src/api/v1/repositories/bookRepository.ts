@@ -1,15 +1,20 @@
 import { randomUUID } from 'crypto';
 
-interface Book {
+export interface Book {
   id: string;
   title: string;
   author: string;
+  dueDate?: string;        
+  borrowedDate?: string;   
+  isBorrowed: boolean;     
+  lateFee: number;
+  daysLate: number;
 }
 
 // Mock database
 let books: Book[] = [
-  { id: '1', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
-  { id: '2', title: '1984', author: 'George Orwell' },
+  { id: '1', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isBorrowed: true, borrowedDate: "2025-02-10", dueDate: "2025-11-17", daysLate: 0, lateFee: 0},
+  { id: '2', title: '1984', author: 'George Orwell', isBorrowed: false, daysLate: 0, lateFee: 0}
 ];
 
 export const getAllBooks = (): Book[] => books;
@@ -17,8 +22,8 @@ export const getAllBooks = (): Book[] => books;
 export const getBookById = (id: string): Book | undefined =>
   books.find((b) => b.id === id);
 
-export const createBook = (book: Omit<Book, 'id'>): Book => {
-  const newBook = { id: randomUUID(), ...book };
+export const createBook = (book: Omit<Book, 'id' | 'daysLate' | 'lateFee'>): Book => {
+  const newBook = { id: randomUUID(), ...book, daysLate: 0, lateFee: 0};
   books.push(newBook);
   return newBook;
 };
