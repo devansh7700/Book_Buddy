@@ -31,3 +31,18 @@ export const deleteBook = (id: string): boolean => {
   return bookRepository.deleteBook(id);
 };
 
+export const updateLateFees = (): void => {
+  const today = new Date();
+  const books = bookRepository.getAllBooks();
+
+  books.forEach((book: Book) => {
+    if (book.isBorrowed && book.dueDate) {
+      const due = new Date(book.dueDate);
+      let daysLate = Math.floor((today.getTime() - due.getTime()) / (1000 * 3600 * 24));
+      if (daysLate < 0) daysLate = 0;
+
+      book.daysLate = daysLate;
+      book.lateFee = daysLate * 1; // $1 per day
+    }
+  });
+};

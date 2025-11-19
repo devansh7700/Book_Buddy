@@ -13,7 +13,7 @@ export interface Book {
 
 // Mock database
 let books: Book[] = [
-  { id: '1', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isBorrowed: true, borrowedDate: "2025-02-10", dueDate: "2025-11-17", daysLate: 0, lateFee: 0},
+  { id: '1', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isBorrowed: true, borrowedDate: "2025-02-10", dueDate: "2025-07-17", daysLate: 0, lateFee: 0},
   { id: '2', title: '1984', author: 'George Orwell', isBorrowed: false, daysLate: 0, lateFee: 0}
 ];
 
