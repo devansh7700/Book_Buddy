@@ -3,7 +3,7 @@ import * as bookService from "../api/v1//services/bookServices";
 
 export const startOverdueCron = () => {
 
-    cron.schedule("* * * * *", () => {
+    cron.schedule("0 0 * * *", () => {
     console.log("Running daily overdue check...");
 
     bookService.updateLateFees();
