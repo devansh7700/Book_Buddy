@@ -11,7 +11,7 @@ const options = {
       description: 'Basic API documentation for Book Buddy app',
     },
   },
-  apis: ['./src/routes/*.ts'], 
+  apis: ['./src/api/v1/routes/*.ts'], 
 };
 
 const specs = swaggerJsdoc(options);

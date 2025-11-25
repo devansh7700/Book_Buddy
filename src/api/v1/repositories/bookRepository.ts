@@ -1,38 +1,93 @@
-import { randomUUID } from 'crypto';
+import { db } from "../../../config/firebase"; 
+import { randomUUID } from "crypto";
 
-interface Book {
+export interface Book {
   id: string;
   title: string;
   author: string;
+  dueDate?: string;
+  borrowedDate?: string;
+  isBorrowed: boolean;
+  lateFee: number;
+  daysLate: number;
 }
 
-// Mock database
-let books: Book[] = [
-  { id: '1', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
-  { id: '2', title: '1984', author: 'George Orwell' },
-];
+const collectionRef = db.collection("books");
 
-export const getAllBooks = (): Book[] => books;
+// Get ALL books
+export const getAllBooks = async (): Promise<Book[]> => {
+  const snapshot = await collectionRef.get();
+  return snapshot.docs.map((doc) => doc.data() as Book);
+};
 
-export const getBookById = (id: string): Book | undefined =>
-  books.find((b) => b.id === id);
+// Get book by ID
+export const getBookById = async (id: string): Promise<Book | undefined> => {
+  const doc = await collectionRef.doc(id).get();
+  return doc.exists ? (doc.data() as Book) : undefined;
+};
 
-export const createBook = (book: Omit<Book, 'id'>): Book => {
-  const newBook = { id: randomUUID(), ...book };
-  books.push(newBook);
+// Create Book
+export const createBook = async (
+  book: Partial<Book>
+): Promise<Book> => {
+  const newBook: Book = {
+  id: randomUUID(),
+  title: book.title!,
+  author: book.author!,
+  isBorrowed: book.isBorrowed ?? false,
+  borrowedDate: book.borrowedDate,
+  dueDate: book.dueDate,
+  daysLate: 0,
+  lateFee: 0
+};
+
+  await collectionRef.doc(newBook.id).set(newBook);
   return newBook;
 };
 
-export const updateBook = (id: string, book: Partial<Book>): Book | undefined => {
-  const index = books.findIndex((b) => b.id === id);
-  if (index === -1) return undefined;
-  books[index] = { ...books[index], ...book };
-  return books[index];
+// Update Book
+export const updateBook = async (
+  id: string,
+  updates: Partial<Book>
+): Promise<Book | undefined> => {
+  const existing = await getBookById(id);
+  if (!existing) return undefined;
+
+  const updatedBook = { ...existing, ...updates };
+
+  await collectionRef.doc(id).update(updatedBook);
+  return updatedBook;
 };
 
-export const deleteBook = (id: string): boolean => {
-  const index = books.findIndex((b) => b.id === id);
-  if (index === -1) return false;
-  books.splice(index, 1);
+// Delete Book
+export const deleteBook = async (id: string): Promise<boolean> => {
+  const existing = await getBookById(id);
+  if (!existing) return false;
+
+  await collectionRef.doc(id).delete();
   return true;
 };
+
+// LATE FEE UPDATE FUNCTION
+
+export const updateLateFees = async (): Promise<void> => {
+  const books = await getAllBooks();
+  const today = new Date();
+
+  for (const book of books) {
+    // Only update borrowed + overdue books
+    if (book.isBorrowed && book.dueDate) {
+      const due = new Date(book.dueDate);
+      let daysLate = Math.floor(
+        (today.getTime() - due.getTime()) / (1000 * 3600 * 24)
+      );
+
+      if (daysLate < 0) daysLate = 0;
+
+      const lateFee = daysLate * 1;
+
+      await updateBook(book.id, { daysLate, lateFee });
+    }
+  }
+};
+
